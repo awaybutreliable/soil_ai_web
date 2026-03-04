@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Soil AI</title>
+</head>
+<body>
+
+    <h1>🌱 Soil AI Fertility System</h1>
+
+    <form method="POST">
+        <label>Enter Crop:</label>
+        <input type="text" name="crop" required>
+        <br><br>
+
+        <label>Land Size (hectares):</label>
+        <input type="number" step="0.1" name="land_size" required>
+        <br><br>
+
+        <button type="submit">Analyze</button>
+    </form>
+
+    {% if soil_data %}
+        <h2>🌾 Soil Report</h2>
+        <p>Nitrogen: {{ soil_data.N }}</p>
+        <p>Phosphorus: {{ soil_data.P }}</p>
+        <p>Potassium: {{ soil_data.K }}</p>
+        <p>Moisture: {{ soil_data.moisture }}</p>
+        <p>pH: {{ soil_data.ph }}</p>
+        <p>Temperature: {{ soil_data.temp }}</p>
+
+        <h2>🧪 Fertilizer Recommendation</h2>
+        {% for fert, amount in fertilizer_plan.items() %}
+            <p>{{ fert }}: {{ amount }} kg total</p>
+        {% endfor %}
+    {% endif %}
+
+</body>
+</html>
