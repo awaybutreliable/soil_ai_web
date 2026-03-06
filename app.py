@@ -7,7 +7,6 @@ app = Flask(__name__)
 
 # -----------------------------
 # Crop nutrient targets (demo)
-# Values are simplified example targets (not agronomy-perfect).
 # -----------------------------
 CROP_REQUIREMENTS = {
     "tomato":     {"N": 120, "P": 60, "K": 80},
@@ -38,14 +37,7 @@ CROP_LABELS = {
 # -----------------------------
 # Simulated live soil sensor feed
 # -----------------------------
-soil_data = {
-    "N": 40,
-    "P": 35,
-    "K": 30,
-    "moisture": 55,
-    "ph": 6.8,
-    "temp": 28
-}
+soil_data = {"N": 40, "P": 35, "K": 30, "moisture": 55, "ph": 6.8, "temp": 28}
 
 def clamp(x, lo, hi):
     return max(lo, min(hi, x))
@@ -97,44 +89,6 @@ def calculate_fertilizers_total(crop: str, hectares: float):
     return deficit, fertilizers
 
 # -----------------------------
-# Farmer "what to do" advice
-# -----------------------------
-def generate_farmer_advice(crop: str, hectares: float, fertilizers: dict, soil: dict):
-    steps = []
-
-    if fertilizers.get("Urea", 0) > 0:
-        steps.append(f"Apply {fertilizers['Urea']} kg Urea")
-    if fertilizers.get("DAP", 0) > 0:
-        steps.append(f"Apply {fertilizers['DAP']} kg DAP")
-    if fertilizers.get("MOP", 0) > 0:
-        steps.append(f"Apply {fertilizers['MOP']} kg MOP")
-
-    crop_name = CROP_LABELS.get(crop, crop).lower()
-
-    if steps:
-        fert_text = " and ".join(steps) + f" to your {hectares} ha {crop_name} field."
-    else:
-        fert_text = "No fertilizer needed right now. Nutrients look sufficient."
-
-    moisture = soil.get("moisture", 50)
-    if moisture < 40:
-        water_text = "Irrigation: High watering required (soil is dry)."
-    elif moisture < 60:
-        water_text = "Irrigation: Moderate watering recommended."
-    else:
-        water_text = "Irrigation: Soil moisture is sufficient."
-
-    temp = soil.get("temp", 25)
-    if temp >= 35:
-        climate_text = "Climate: Very hot — water early morning/evening if possible."
-    elif temp <= 15:
-        climate_text = "Climate: Cold — nutrient uptake may be slower."
-    else:
-        climate_text = "Climate: Temperature is okay."
-
-    return fert_text, water_text, climate_text
-
-# -----------------------------
 # Languages
 # -----------------------------
 TRANSLATIONS = {
@@ -148,6 +102,22 @@ TRANSLATIONS = {
         "fert": "Fertilizer Recommendation (kg total)",
         "deficit": "Deficiency (ppm)",
         "action": "Recommended Action",
+        "pill_crop": "Crop",
+        "pill_area": "Area",
+        "fertilizers_heading": "Fertilizers",
+
+        # Advice templates
+        "apply": "Apply {amount} kg {name}",
+        "to_field": "to your {hectares} ha {crop} field.",
+        "no_fert": "No fertilizer needed right now. Nutrients look sufficient.",
+
+        "irr_high": "Irrigation: High watering required (soil is dry).",
+        "irr_mod": "Irrigation: Moderate watering recommended.",
+        "irr_ok":  "Irrigation: Soil moisture is sufficient.",
+
+        "cl_hot":  "Climate: Very hot — water early morning/evening if possible.",
+        "cl_cold": "Climate: Cold — nutrient uptake may be slower.",
+        "cl_ok":   "Climate: Temperature is okay.",
     },
     "Hindi": {
         "title": "मृदा एआई डैशबोर्ड",
@@ -159,6 +129,21 @@ TRANSLATIONS = {
         "fert": "उर्वरक सिफारिश (कुल किलो)",
         "deficit": "कमी (ppm)",
         "action": "क्या करें",
+        "pill_crop": "फसल",
+        "pill_area": "क्षेत्र",
+        "fertilizers_heading": "उर्वरक",
+
+        "apply": "{name} {amount} किलो डालें",
+        "to_field": "{hectares} हेक्टेयर {crop} खेत में।",
+        "no_fert": "अभी उर्वरक की जरूरत नहीं है। पोषक तत्व पर्याप्त हैं।",
+
+        "irr_high": "सिंचाई: अधिक पानी की जरूरत है (मिट्टी सूखी है)।",
+        "irr_mod": "सिंचाई: मध्यम पानी देने की सलाह।",
+        "irr_ok":  "सिंचाई: मिट्टी की नमी पर्याप्त है।",
+
+        "cl_hot":  "मौसम: बहुत गर्म — सुबह/शाम पानी दें।",
+        "cl_cold": "मौसम: ठंड — पोषक तत्व अवशोषण धीमा हो सकता है।",
+        "cl_ok":   "मौसम: तापमान ठीक है।",
     },
     "Telugu": {
         "title": "సాయిల్ ఏఐ డాష్‌బోర్డ్",
@@ -170,10 +155,64 @@ TRANSLATIONS = {
         "fert": "ఎరువు సిఫారసు (మొత్తం కిలోలు)",
         "deficit": "లోపం (ppm)",
         "action": "ఏం చేయాలి",
+        "pill_crop": "పంట",
+        "pill_area": "విస్తీర్ణం",
+        "fertilizers_heading": "ఎరువులు",
+
+        "apply": "{name} {amount} కిలోలు వేయండి",
+        "to_field": "{hectares} హెక్టార్ల {crop} పొలంలో।",
+        "no_fert": "ప్రస్తుతం ఎరువులు అవసరం లేదు. పోషకాలు సరిపోతున్నాయి.",
+
+        "irr_high": "నీరు: ఎక్కువ నీరు అవసరం (నేల పొడిగా ఉంది).",
+        "irr_mod": "నీరు: మధ్యమ స్థాయిలో నీరు ఇవ్వండి.",
+        "irr_ok":  "నీరు: నేల తేమ సరిపోతుంది.",
+
+        "cl_hot":  "వాతావరణం: చాలా వేడి — ఉదయం/సాయంత్రం నీరు ఇవ్వండి.",
+        "cl_cold": "వాతావరణం: చల్లగా ఉంది — పోషక శోషణ నెమ్మదిగా ఉండొచ్చు.",
+        "cl_ok":   "వాతావరణం: ఉష్ణోగ్రత బాగుంది.",
     }
 }
 
-# Build crop <option> HTML automatically
+FERT_NAMES = {"Urea": "Urea", "DAP": "DAP", "MOP": "MOP"}  # keep fertilizer names consistent
+
+def generate_farmer_advice(crop: str, hectares: float, fertilizers: dict, soil: dict, lang: str):
+    t = TRANSLATIONS.get(lang, TRANSLATIONS["English"])
+    crop_name = CROP_LABELS.get(crop, crop).lower()
+
+    steps = []
+    for fert_key in ["Urea", "DAP", "MOP"]:
+        amt = fertilizers.get(fert_key, 0)
+        if amt and amt > 0:
+            steps.append(t["apply"].format(amount=amt, name=FERT_NAMES[fert_key]))
+
+    if steps:
+        # join in a readable way for each language
+        if lang == "English":
+            fert_text = " and ".join(steps) + " " + t["to_field"].format(hectares=hectares, crop=crop_name)
+        else:
+            # for Hindi/Telugu, just join with " + "
+            fert_text = " + ".join(steps) + " " + t["to_field"].format(hectares=hectares, crop=crop_name)
+    else:
+        fert_text = t["no_fert"]
+
+    moisture = soil.get("moisture", 50)
+    if moisture < 40:
+        water_text = t["irr_high"]
+    elif moisture < 60:
+        water_text = t["irr_mod"]
+    else:
+        water_text = t["irr_ok"]
+
+    temp = soil.get("temp", 25)
+    if temp >= 35:
+        climate_text = t["cl_hot"]
+    elif temp <= 15:
+        climate_text = t["cl_cold"]
+    else:
+        climate_text = t["cl_ok"]
+
+    return fert_text, water_text, climate_text
+
 def build_crop_options(selected_crop: str) -> str:
     options = []
     for key in CROP_REQUIREMENTS.keys():
@@ -211,9 +250,7 @@ HTML = """
       <div class="row">
         <div>
           <label id="lblCrop">{{ t.crop }}</label><br>
-          <select name="crop" id="crop">
-            {{ crop_options|safe }}
-          </select>
+          <select name="crop" id="crop">{{ crop_options|safe }}</select>
         </div>
 
         <div>
@@ -237,8 +274,8 @@ HTML = """
     </form>
 
     <p style="margin-top:14px">
-      <span class="pill" id="pillCrop">Crop: {{ crop|upper }}</span>
-      <span class="pill" id="pillArea">Area: {{ hectares }} ha</span>
+      <span class="pill" id="pillCrop">{{ t.pill_crop }}: {{ crop|upper }}</span>
+      <span class="pill" id="pillArea">{{ t.pill_area }}: {{ hectares }} ha</span>
       <span class="pill">Live: 5s</span>
     </p>
   </div>
@@ -265,7 +302,7 @@ HTML = """
       <div>K</div><div id="defK">—</div>
     </div>
 
-    <h3 style="margin-top:18px;margin-bottom:6px">Fertilizers</h3>
+    <h3 style="margin-top:18px;margin-bottom:6px" id="hdrFertNames">{{ t.fertilizers_heading }}</h3>
     <div class="kv">
       <div>Urea</div><div id="fertU">—</div>
       <div>DAP</div><div id="fertD">—</div>
@@ -299,6 +336,7 @@ HTML = """
     document.getElementById("hdrFert").textContent = t.fert;
     document.getElementById("hdrDef").textContent = t.deficit;
     document.getElementById("hdrAction").textContent = t.action;
+    document.getElementById("hdrFertNames").textContent = t.fertilizers_heading;
   }
 
   async function refreshData() {
@@ -308,6 +346,7 @@ HTML = """
 
     applyText(d.text);
 
+    // Soil
     document.getElementById("soilN").textContent = d.soil.N;
     document.getElementById("soilP").textContent = d.soil.P;
     document.getElementById("soilK").textContent = d.soil.K;
@@ -315,20 +354,24 @@ HTML = """
     document.getElementById("soilPH").textContent = d.soil.ph;
     document.getElementById("soilT").textContent = d.soil.temp + " °C";
 
+    // Deficit
     document.getElementById("defN").textContent = d.deficit.N + " ppm";
     document.getElementById("defP").textContent = d.deficit.P + " ppm";
     document.getElementById("defK").textContent = d.deficit.K + " ppm";
 
+    // Fertilizers
     document.getElementById("fertU").textContent = d.fertilizers.Urea + " kg";
     document.getElementById("fertD").textContent = d.fertilizers.DAP + " kg";
     document.getElementById("fertMOP").textContent = d.fertilizers.MOP + " kg";
 
+    // Advice (NOW translated!)
     document.getElementById("advFert").textContent = d.advice.fertilizer;
     document.getElementById("advWater").textContent = d.advice.irrigation;
     document.getElementById("advClimate").textContent = d.advice.climate;
 
-    document.getElementById("pillCrop").textContent = "Crop: " + d.crop.toUpperCase();
-    document.getElementById("pillArea").textContent = "Area: " + d.hectares + " ha";
+    // Pills (NOW translated!)
+    document.getElementById("pillCrop").textContent = d.text.pill_crop + ": " + d.crop.toUpperCase();
+    document.getElementById("pillArea").textContent = d.text.pill_area + ": " + d.hectares + " ha";
   }
 
   document.getElementById("controls").addEventListener("submit", (e) => {
@@ -365,15 +408,8 @@ def dashboard():
     hectares = clamp(hectares, 0.1, 10_000)
 
     crop_options = build_crop_options(crop)
-
-    return render_template_string(
-        HTML,
-        crop=crop,
-        hectares=hectares,
-        language=language,
-        t=TRANSLATIONS[language],
-        crop_options=crop_options
-    )
+    return render_template_string(HTML, crop=crop, hectares=hectares, language=language,
+                                  t=TRANSLATIONS[language], crop_options=crop_options)
 
 @app.route("/data", methods=["GET"])
 def data():
@@ -388,7 +424,7 @@ def data():
     hectares = clamp(hectares, 0.1, 10_000)
 
     deficit, fertilizers = calculate_fertilizers_total(crop, hectares)
-    fert_text, water_text, climate_text = generate_farmer_advice(crop, hectares, fertilizers, soil_data)
+    fert_text, water_text, climate_text = generate_farmer_advice(crop, hectares, fertilizers, soil_data, language)
 
     return jsonify({
         "crop": crop,
@@ -405,5 +441,4 @@ def data():
     })
 
 if __name__ == "__main__":
-    # host 0.0.0.0 lets other devices on Wi-Fi access it
     app.run(host="0.0.0.0", port=5000, debug=False)
